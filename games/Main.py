@@ -57,16 +57,17 @@ async def right_answer(message):
     await new_question()
 
 
+def check(message):
+    return test_answer(quizz.answer_question, message.content.upper()) and test_message_channel(message.channel)
+
+
 async def my_background_task():
-    global quizz
-    await client.wait_until_ready()
-    channel = discord.Object(id='405665341977395211')
-    while not client.is_closed:
-        await asyncio.sleep(25)  # task runs every 60 seconds
-        await client.send_message(channel, "Nouvelle question : ")
-        quizz.generate_question_answer()
-        await client.send_message(quizz.channel,
-                                  "```NOUVELLE QUESTION:" + quizz.question + "```")
+    msg = await client.wait_for_message(timeout=30, check=check)
+    if msg == None:
+        await client.send_message(quizz.channel, "```Réponse : " + quizz.answer_question + "```")
+        await new_question()
+    else:
+        await right_answer(msg)
 
 
 @client.event
@@ -77,21 +78,20 @@ async def on_message(message):
         await stop_quizz()
 
     if message.content.startswith("!quizz"):
-
         await start_quizz()
 
     if quizz.status == Status.QUIZZ_ACTIVE:
         # Righ answer process
-        if test_answer(quizz.answer_question, message.content.upper()) and test_message_channel(message.channel):
-            await right_answer(message)
+        # if test_answer(quizz.answer_question, message.content.upper()) and test_message_channel(message.channel):
+        #     await right_answer(message)
 
         # Bad answer process
-        elif not test_answer(quizz.answer_question, message.content.upper()) \
+        if not test_answer(quizz.answer_question, message.content.upper()) \
                 and test_message_channel(message.channel) \
-                and message.author.name != "Quizz"\
+                and message.author.name != "Quizz" \
                 and message.content != "!quizz":
             await client.add_reaction(message, u"\u274C")
 
 
-#client.loop.create_task(my_background_task())
+client.loop.create_task(my_background_task())
 client.run(str(sys.argv[1]))  # Replace token with your bots token
