@@ -1,2 +1,3 @@
 # Discord-Bot
-Discord Bot with multiple tasks
+Personal project to create a quizz bot for discord server
+TODO
